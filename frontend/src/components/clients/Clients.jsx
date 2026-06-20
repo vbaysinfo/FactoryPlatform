@@ -15,14 +15,14 @@ export default function Clients() {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { if (tenant) load(); }, [tenant]);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("clients")
-      .select("*, projects(id)")
-      .eq("tenant_id", tenant.id)
-      .order("created_at", { ascending: false });
+    let query = supabase.from("clients").select("*, projects(id)").order("created_at", { ascending: false });
+    if (tenant?.id) query = query.eq("tenant_id", tenant.id);
+    const { data, error } = await query;
+    if (error) addNotification(error.message, "error");
     setClients(data || []);
     setLoading(false);
   }
@@ -33,9 +33,12 @@ export default function Clients() {
   async function save() {
     if (!form.name.trim()) return addNotification("Client name is required", "error");
     setSaving(true);
-    const payload = { ...form, tenant_id: tenant.id, created_by: user.id };
+    const { id, created_at, updated_at, projects, ...formData } = form;
+    const payload = { ...formData };
+    if (tenant?.id) payload.tenant_id = tenant.id;
+    if (user?.id) payload.created_by = user.id;
     const { error } = editing
-      ? await supabase.from("clients").update(form).eq("id", editing.id)
+      ? await supabase.from("clients").update(payload).eq("id", editing.id)
       : await supabase.from("clients").insert(payload);
     if (error) { addNotification(error.message, "error"); }
     else { addNotification(editing ? "Client updated" : "Client created"); setModal(false); load(); }

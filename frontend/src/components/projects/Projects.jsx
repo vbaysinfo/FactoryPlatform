@@ -26,30 +26,32 @@ export default function Projects() {
   const [saving, setSaving] = useState(false);
   const [detail, setDetail] = useState(pageParams?.projectId || null);
 
-  useEffect(() => { if (tenant) { load(); loadClients(); } }, [tenant]);
+  useEffect(() => { load(); loadClients(); }, []);
   useEffect(() => { if (pageParams?.projectId) setDetail(pageParams.projectId); }, [pageParams]);
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("projects")
-      .select("*, clients(name, phone), rooms(id)")
-      .eq("tenant_id", tenant.id)
-      .order("created_at", { ascending: false });
+    let q = supabase.from("projects").select("*, clients(name, phone), rooms(id)").order("created_at", { ascending: false });
+    if (tenant?.id) q = q.eq("tenant_id", tenant.id);
+    const { data } = await q;
     setProjects(data || []);
     setLoading(false);
   }
 
   async function loadClients() {
-    const { data } = await supabase.from("clients").select("id, name").eq("tenant_id", tenant.id).eq("is_active", true);
+    let q = supabase.from("clients").select("id, name").eq("is_active", true);
+    if (tenant?.id) q = q.eq("tenant_id", tenant.id);
+    const { data } = await q;
     setClients(data || []);
   }
 
   async function save() {
     if (!form.name || !form.client_id) return addNotification("Name and Client are required", "error");
     setSaving(true);
-    const { error } = await supabase.from("projects").insert({
-      ...form, tenant_id: tenant.id, created_by: user.id
-    });
+    const payload = { ...form };
+    if (tenant?.id) payload.tenant_id = tenant.id;
+    if (user?.id) payload.created_by = user.id;
+    const { error } = await supabase.from("projects").insert(payload);
     if (error) addNotification(error.message, "error");
     else { addNotification("Project created"); setModal(false); setForm(EMPTY); load(); }
     setSaving(false);

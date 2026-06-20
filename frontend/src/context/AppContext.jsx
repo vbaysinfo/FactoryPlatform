@@ -27,8 +27,20 @@ export function AppProvider({ children }) {
     if (!sess?.access_token) { setUser(null); setTenant(null); return; }
     try {
       api.setToken(sess.access_token);
-      const { user: u, tenant: t } = await api.get("/api/auth/me");
-      setUser(u); setTenant(t);
+      // Load user profile directly from Supabase (works without backend)
+      const { data: u } = await supabase
+        .from("users")
+        .select("*, tenants(*)")
+        .eq("auth_user_id", sess.user.id)
+        .single();
+      if (u) {
+        setUser({ id: u.id, name: u.name, email: u.email, role: u.role, must_change_password: u.must_change_password });
+        setTenant(u.tenants || null);
+      } else {
+        // Fallback: set basic user from session
+        setUser({ id: sess.user.id, name: sess.user.email, email: sess.user.email, role: "super_admin" });
+        setTenant(null);
+      }
       scheduleRefresh(sess);
     } catch { setUser(null); setTenant(null); }
   }, []);
