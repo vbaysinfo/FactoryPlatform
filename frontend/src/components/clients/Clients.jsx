@@ -36,7 +36,6 @@ export default function Clients() {
     const { id, created_at, updated_at, projects, ...formData } = form;
     const payload = { ...formData };
     if (tenant?.id) payload.tenant_id = tenant.id;
-    if (user?.id) payload.created_by = user.id;
     const { error } = editing
       ? await supabase.from("clients").update(payload).eq("id", editing.id)
       : await supabase.from("clients").insert(payload);

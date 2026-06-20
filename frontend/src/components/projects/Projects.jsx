@@ -50,7 +50,6 @@ export default function Projects() {
     setSaving(true);
     const payload = { ...form };
     if (tenant?.id) payload.tenant_id = tenant.id;
-    if (user?.id) payload.created_by = user.id;
     const { error } = await supabase.from("projects").insert(payload);
     if (error) addNotification(error.message, "error");
     else { addNotification("Project created"); setModal(false); setForm(EMPTY); load(); }
