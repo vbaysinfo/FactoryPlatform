@@ -130,7 +130,7 @@ export default function CutListEditor({ room, project, onBack }) {
     const num = (revisions.length || 0) + 1;
     const { data, error } = await supabase.from("cut_list_revisions").insert({
       room_id: room.id, tenant_id: room.tenant_id || project?.tenant_id,
-      revision_number: num, status: "draft", created_by: user?.id
+      revision_number: num, status: "draft"
     }).select().single();
     if (error) { addNotification(error.message, "error"); setSaving(false); return; }
     await supabase.from("rooms").update({ status: "cut_list_draft" }).eq("id", room.id);
