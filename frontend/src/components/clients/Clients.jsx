@@ -44,6 +44,13 @@ export default function Clients() {
     setSaving(false);
   }
 
+  async function deleteClient(c) {
+    if (!window.confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
+    const { error } = await supabase.from("clients").delete().eq("id", c.id);
+    if (error) addNotification(error.message, "error");
+    else { addNotification("Client deleted"); load(); }
+  }
+
   async function toggleActive(c) {
     await supabase.from("clients").update({ is_active: !c.is_active }).eq("id", c.id);
     load();
@@ -88,6 +95,7 @@ export default function Clients() {
                 <div style={{ display: "flex", gap: 6 }}>
                   <Btn size="sm" variant="ghost" onClick={() => openEdit(r)}>Edit</Btn>
                   <Btn size="sm" variant="ghost" onClick={() => toggleActive(r)}>{r.is_active ? "Deactivate" : "Activate"}</Btn>
+                  <Btn size="sm" variant="ghost" onClick={() => deleteClient(r)} style={{ color: "#ef4444" }}>🗑</Btn>
                 </div>
               )},
             ]}
