@@ -217,12 +217,12 @@ function RecentActivity({ projects, jobs }) {
 }
 
 export default function Dashboard() {
-  const { tenant, navigate } = useApp();
+  const { tenant, user, navigate } = useApp();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState([]);
 
-  useEffect(() => { if (tenant) load(); }, [tenant]);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
@@ -233,27 +233,27 @@ export default function Dashboard() {
         { data: allProjects },
         { data: allJobs },
         { data: invoices },
-        { data: dispatches },
+        { count: pendingDispatchCount },
         { data: lowStock },
         { data: overdueMachines },
         { data: cutlistPending },
       ] = await Promise.all([
-        supabase.from("clients").select("*", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("is_active", true),
-        supabase.from("projects").select("*", { count: "exact", head: true }).eq("tenant_id", tenant.id),
-        supabase.from("projects").select("*, clients(name)").eq("tenant_id", tenant.id).order("created_at", { ascending: false }),
-        supabase.from("production_jobs").select("*, projects(name)").eq("tenant_id", tenant.id).order("created_at", { ascending: false }),
-        supabase.from("invoices").select("grand_total, amount_paid, amount_due, invoice_date").eq("tenant_id", tenant.id),
-        supabase.from("dispatch_orders").select("*", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("status", "pending"),
-        supabase.from("inventory_items").select("name, stock_qty, min_stock").eq("tenant_id", tenant.id),
-        supabase.from("machines").select("name, next_service_date").eq("tenant_id", tenant.id).not("next_service_date", "is", null).lte("next_service_date", new Date().toISOString().split("T")[0]),
-        supabase.from("cut_list_revisions").select("id").eq("tenant_id", tenant.id).eq("status", "confirmed"),
+        supabase.from("clients").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("projects").select("*", { count: "exact", head: true }),
+        supabase.from("projects").select("*, clients(name)").order("created_at", { ascending: false }),
+        supabase.from("production_jobs").select("*, projects(name)").order("created_at", { ascending: false }),
+        supabase.from("invoices").select("grand_total, amount_paid, amount_due, invoice_date"),
+        supabase.from("dispatch_orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("inventory_items").select("name, stock_qty, min_stock"),
+        supabase.from("machines").select("name, next_service_date").not("next_service_date", "is", null).lte("next_service_date", new Date().toISOString().split("T")[0]),
+        supabase.from("cut_list_revisions").select("id").eq("status", "confirmed"),
       ]);
+      const pendingDispatch = pendingDispatchCount || 0;
 
       const totalInvoiced = (invoices || []).reduce((s, i) => s + (i.grand_total || 0), 0);
       const totalReceived = (invoices || []).reduce((s, i) => s + (i.amount_paid || 0), 0);
       const totalDue = (invoices || []).reduce((s, i) => s + (i.amount_due || 0), 0);
       const activeJobs = (allJobs || []).filter(j => j.status === "in_progress").length;
-      const pendingDispatch = dispatches?.count || 0;
 
       // Revenue chart
       const monthMap = {};
@@ -299,7 +299,7 @@ export default function Dashboard() {
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: "#0f172a" }}>Factory Overview</h1>
         <p style={{ color: "#64748b", fontSize: 13, marginTop: 4 }}>
-          {tenant?.factory_name} · {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          {tenant?.factory_name || user?.name || "ModularPro"} · {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
 
