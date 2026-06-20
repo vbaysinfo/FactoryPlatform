@@ -42,18 +42,29 @@ DO $$ BEGIN CREATE POLICY "service role full access users" ON users USING (true)
 
 -- ── Clients ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clients (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,
-  email       TEXT,
-  phone       TEXT,
-  address     TEXT,
-  gst_number  TEXT,
-  is_active   BOOLEAN NOT NULL DEFAULT true,
-  notes       TEXT,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  contact_person  TEXT,
+  email           TEXT,
+  phone           TEXT,
+  address         TEXT,
+  city            TEXT,
+  state           TEXT,
+  pincode         TEXT,
+  gst_number      TEXT,
+  pan_number      TEXT,
+  is_active       BOOLEAN NOT NULL DEFAULT true,
+  notes           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Add missing columns if table already exists
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS contact_person TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS state TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS pincode TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS pan_number TEXT;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service role full access clients" ON clients USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
