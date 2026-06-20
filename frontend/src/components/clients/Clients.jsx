@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase.js";
 import { useApp } from "../../context/AppContext.jsx";
 import { Card, Btn, Input, Textarea, Modal, Table, PageHeader, Badge, Spinner } from "../common/ui.jsx";
 
-const EMPTY = { name:"", contact_person:"", phone:"", email:"", address:"", city:"", state:"", pincode:"", gst_number:"", pan_number:"", notes:"" };
+const EMPTY = { name:"", contact_person:"", phone:"", email:"", address:"", city:"", state:"", pincode:"", pan_number:"", notes:"" };
 
 export default function Clients() {
   const { tenant, user, addNotification } = useApp();
@@ -81,7 +81,7 @@ export default function Clients() {
               { key: "phone", label: "Phone" },
               { key: "email", label: "Email" },
               { key: "city", label: "City" },
-              { key: "gst_number", label: "GST No." },
+
               { key: "projects", label: "Projects", align: "center", render: (v) => <Badge color="blue">{v?.length || 0}</Badge> },
               { key: "is_active", label: "Status", render: (v) => <Badge color={v ? "green" : "gray"}>{v ? "Active" : "Inactive"}</Badge> },
               { key: "id", label: "Actions", render: (_, r) => (
@@ -107,7 +107,6 @@ export default function Clients() {
           <Input label="City" {...f("city")} />
           <Input label="State" {...f("state")} />
           <Input label="Pincode" {...f("pincode")} />
-          <Input label="GST Number" {...f("gst_number")} />
           <Input label="PAN Number" {...f("pan_number")} />
           <div style={{ gridColumn: "1 / -1" }}><Textarea label="Notes" rows={2} {...f("notes")} /></div>
         </div>
